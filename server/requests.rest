@@ -1,0 +1,25 @@
+GET http://localhost:3000/api/todos/
+###
+POST http://localhost:3000/api/todos
+Content-Type: application/json
+
+{
+    "title": "test",
+    "description": "loremipsumdolersitamer",
+    "isComplated": true
+}
+###
+DELETE  http://localhost:3000/api/todos
+Content-Type: application/json
+
+{
+    "id": "66d4850e0912a68535de67b7"
+}
+###
+PATCH http://localhost:3000/api/todos
+Content-Type: application/json
+
+{
+    "id": "66d31510769b786a621b6335",
+    "title": "123132"
+}
