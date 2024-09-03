@@ -37,24 +37,5 @@ export const App = () => {
                 <Outlet />
             </Container>
         </AppShell.Main>
-
-        <AppShell.Footer withBorder={false} px={30}>
-
-            <Group w={"100%"} justify="space-between">
-                <Text>
-                    Made by
-                    <Anchor href={author.url} target="_blank">
-                        {author.name}
-                    </Anchor> 
-                </Text>
-                <Tooltip label="Meow">
-                    <Text>
-                        :3
-                    </Text>
-                </Tooltip>
-
-            </Group>
-
-        </AppShell.Footer>
     </AppShell>;
 };
