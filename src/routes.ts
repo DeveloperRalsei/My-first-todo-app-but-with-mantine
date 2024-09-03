@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { ToDo } from "./Pages";
-export const url = "http://localhost:3000";
+export const url = "https://my-first-todo-app-but-with-mantine.onrender.com";
 
 export const getAll = async (): Promise<AxiosResponse> => await axios.get(`${url}/api/todos`).then(res => {
     return res;
