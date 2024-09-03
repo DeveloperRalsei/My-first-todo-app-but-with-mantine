@@ -1,22 +1,24 @@
-import { Accordion, ActionIcon, Button, Checkbox, Group, Loader, Stack, Table, Textarea, TextInput, useMantineTheme } from "@mantine/core";
+import { Accordion, ActionIcon, Button, ButtonGroup, DefaultMantineColor, Group, Loader, LoadingOverlay, Stack, Table, Textarea, TextInput } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
 import { showNotification } from "@mantine/notifications";
 import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-import { getAll, getOne, RemoveToDo, UpdateToDo } from "./routes";
+import { createRef, useEffect, useState } from "react";
+import { AddToDo, getAll, getOne, RemoveAllToDo, RemoveToDo, UpdateToDo } from "./routes";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "@mantine/form";
+import { closeAllModals, modals, openConfirmModal } from "@mantine/modals";
+import { nprogress } from "@mantine/nprogress";
 
 export type ToDo = {
-    _id: any,
+    _id?: any,
     title: string,
     description: string;
 };
 
-function notifcation(type: "error" | "default", message: string) {
+function notifcation(type: "error" | "default", message: string, color?: DefaultMantineColor) {
     return showNotification({
         title: type === 'default' ? "Yayy! :3" : "Error!",
-        color: type === 'default' ? "green" : "red",
+        color: color || type === 'default' ? "green" : "red",
         message: message,
         position: "bottom-center",
         autoClose: 1500
@@ -29,20 +31,45 @@ export const List = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        async function loadTodos() {
-            try {
-                const res = await getAll();
-                setTodos(res.data);
-                notifcation("default", "To-Do's Loaded");
-            } catch (error) {
-                console.error(error);
-                notifcation("error", "Failed to load to-do's");
-                setTodos([]);
-            }
-        }
-
         loadTodos();
     }, []);
+
+    async function loadTodos() {
+        nprogress.start()
+        try {
+            const res = await getAll();
+            if(!res){
+                setTodos([])
+                notifcation("error", "Server side error")
+                nprogress.complete()
+                setTimeout(() => {
+                   loadTodos() 
+                }, 4000);
+                return
+            }
+
+            if(!res.data.length) {
+                notifcation("error", "No ToDo found! Retrying")
+                nprogress.complete()
+                setTimeout(() => {
+                    loadTodos()
+                }, 4000);
+                setTodos([])
+                return
+            }
+            setTodos(res.data);
+            notifcation("default", "To-Do's Loaded");
+            nprogress.complete()
+        } catch (error) {
+            console.error(error);
+            notifcation("error", "Failed to load to-do's! Retrying! Please check your internet connection");
+            setTimeout(() => {
+                loadTodos()
+            }, 4000);
+            setTodos([]);
+            nprogress.complete()
+        }
+    }
 
     const filteredTodos = searchValue
         ? todos.filter((t) =>
@@ -54,35 +81,109 @@ export const List = () => {
         )
         : todos;
 
-    if (!todos) return <Loader type="dots" />;
-
-
     return <Stack>
-        <Group justify="space-between">
-            <TextInput
-                value={searchValue}
-                placeholder="Search..."
-                w={"50vw"}
-                onChange={e => setSearchValue(e.currentTarget.value)}
+        <TextInput
+            value={searchValue}
+            placeholder="Search..."
+            onChange={e => setSearchValue(e.currentTarget.value)}
+        />
+
+        <ButtonGroup display={"flex"}>
+            <Button
+                rightSection={<IconTrash />}
+                children="Delete All"
+                color="red"
+                onClick={() => openConfirmModal({
+                    title: "Are you sure you want to delete them all?",
+                    labels: { confirm: "Yes", cancel: "Nuh uh!" },
+                    confirmProps: { color: "red" },
+                    onConfirm: async () => {
+                        try {
+                            const response = await RemoveAllToDo()
+                            if(!response.data) {
+                                notifcation("error", "Operation Failed!")
+                                loadTodos()
+                                return
+                            }
+
+                            notifcation("default" ,"Deleted All", "red")
+                            loadTodos()
+                        } catch (error) {
+                            console.error(error)
+                            notifcation("error", "Operation failed! Check your internet connection!")
+                        }
+                    }
+                })}
+
             />
             <Button
                 rightSection={<IconPlus />}
                 children="New"
+                onClick={() => {
+                    const formRef = createRef<HTMLFormElement>();
+
+                    modals.open({
+                        title: "New Todo",
+                        children: (
+                            <form
+                                ref={formRef}
+                                onSubmit={e => {
+                                    e.preventDefault();
+                                    const formData = new FormData(formRef.current!);
+                                    const title = formData.get("title");
+                                    const description = formData.get("description");
+
+                                    if (!title || !description) return notifcation("error", "All fields are required!");
+
+                                    if (typeof title === 'string' && typeof description === 'string') {
+                                        const newTodo: ToDo = { title, description };
+                                        AddToDo(newTodo).then(res => {
+                                            if(!res.data){
+                                                notifcation("error", "Something went wrong! Check your internet connection!")
+                                                return
+                                            }
+
+                                            notifcation("default" ,"Added new ToDo!")
+                                            loadTodos()
+                                            closeAllModals();
+                                        }).catch(error => {
+                                            console.error(error)
+                                            notifcation("error", "Something went wrong! Check your internet connection!")
+                                        });
+                                    } else {
+                                        return notifcation("error", "Something went wrong! Check your internet connection!");
+                                    }
+                                }}>
+                                <Stack>
+                                    <TextInput name="title" label="Todo Title:" withAsterisk />
+                                    <Textarea name="description" label="Todo Description:" withAsterisk />
+                                    <Button type="submit" fullWidth children="Add" />
+                                </Stack>
+                            </form>
+                        )
+                    });
+                }}
             />
-        </Group>
+
+        </ButtonGroup>
+
         <Table withRowBorders>
             <Table.Thead>
                 <Table.Tr>
-                    <Table.Th/>
+                    <Table.Th />
                     <Table.Th>Title</Table.Th>
                     <Table.Th hiddenFrom="xl" w={120}>Edit</Table.Th>
                 </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-                {!todos && <Loader />}
-                    {filteredTodos.length !== 0 ? filteredTodos.map((t, i) => (
+                {!todos && <Table.Tr>
+                    <Table.Td rowSpan={999} colSpan={999} ta={"center"}>
+                        <Loader />
+                    </Table.Td>
+                </Table.Tr>}
+                {filteredTodos.length !== 0 ? filteredTodos.map((t, i) => (
                     <Table.Tr key={i}>
-                        <Table.Td w={0}>{i+1}</Table.Td>
+                        <Table.Td w={0}>{i + 1}</Table.Td>
                         <Table.Td>
                             <Accordion variant="filled">
                                 <Accordion.Item value={t.title}>
@@ -98,12 +199,12 @@ export const List = () => {
                                 </ActionIcon>
                                 <ActionIcon color="red" onClick={async () => {
                                     try {
-                                        const response = await RemoveToDo(t._id);
-                                        if (response) {notifcation("default", "Deleted!"); console.log(response)}
-                                        else notifcation("error", "Nuh uh!");
+                                        const response: any = await RemoveToDo(t._id);
+                                        response.data ? notifcation("default", "Deleted!") : notifcation("error", "Not Found!");
+                                        loadTodos();
                                     } catch (error) {
                                         console.error(error);
-                                        notifcation("error", "Nuh uh!");
+                                        notifcation("error", "Server side error!");
                                     }
                                 }}>
                                     <IconTrash />
@@ -111,10 +212,10 @@ export const List = () => {
                             </Group>
                         </Table.Td>
                     </Table.Tr>
-                    
+
                 )) : <Table.Tr>
-                        <Table.Td colSpan={99} ta={"center"}>Couldn't find</Table.Td>
-                    </Table.Tr>}
+                    <Table.Td colSpan={99} ta={"center"}>There's no ToDo's. Let's add one</Table.Td>
+                </Table.Tr>}
             </Table.Tbody>
         </Table>
     </Stack>;
@@ -126,6 +227,7 @@ export const Todo = () => {
         title: "",
         description: "",
     });
+    const [visible, setVisible] = useState<boolean>(true)
 
     const { id } = useParams();
     const form = useForm({
@@ -146,7 +248,7 @@ export const Todo = () => {
             try {
                 const response = await getOne(id);
                 setTodo(response.data);
-
+                setVisible(false)
             } catch (error) {
                 console.error(error);
                 setTodo(v => ({ ...v }));
@@ -165,6 +267,12 @@ export const Todo = () => {
     }, [todo]);
 
     return <Stack>
+
+        <LoadingOverlay 
+            visible={visible}
+            zIndex={1000}
+        />
+
         <form onSubmit={form.onSubmit(async v => {
             try {
                 const values = form.getValues();

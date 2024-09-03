@@ -1,7 +1,10 @@
 {
   "name": "mantine-todo",
-  "private": true,
-  "version": "0.0.0",
+  "author": {
+    "name": "Developer Ralsei",
+    "url": "http://developerRalsei.github.io"
+  },
+  "version": "0.1.0",
   "type": "module",
   "license": "MIT",
   "scripts": {
@@ -13,6 +16,7 @@
     "@mantine/core": "^7.12.1",
     "@mantine/form": "^7.12.2",
     "@mantine/hooks": "^7.12.1",
+    "@mantine/modals": "^7.12.2",
     "@mantine/notifications": "^7.12.2",
     "@mantine/nprogress": "^7.12.2",
     "@tabler/icons-react": "^3.14.0",

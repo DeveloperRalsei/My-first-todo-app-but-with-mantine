@@ -67,8 +67,8 @@ app.post("/api/todos", async (req: Request, res: Response) => {
     }
 });
 
-app.delete("/api/todos", async (req: Request, res: Response) => {
-    const { id } = req.body;
+app.delete("/api/todos/:id", async (req: Request, res: Response) => {
+    const { id } = req.params;
 
     try {
         const result = await todoModel.findByIdAndDelete(id);
@@ -79,9 +79,18 @@ app.delete("/api/todos", async (req: Request, res: Response) => {
     }
 });
 
+app.delete("/api/todos", async (req: Request, res: Response) => {
+    try {
+        await todoModel.deleteMany({});
+        res.send(true);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send(error)
+    }
+});
+
 app.patch("/api/todos/:id", async (req: Request, res: Response) => {
-    const { title, description, isComplated }: ToDo = req.body;
-    const {id} = req.params
+    const { id } = req.params;
 
     try {
         const result = await todoModel.findByIdAndUpdate(id, { ...req.body });

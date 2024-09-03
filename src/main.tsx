@@ -2,11 +2,14 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { createTheme, MantineProvider } from "@mantine/core";
 import '@mantine/core/styles.css';
-import '@mantine/notifications/styles.css'
+import '@mantine/notifications/styles.css';
+import '@mantine/nprogress/styles.css';
 import { App } from './App';
 import { List, Todo } from './Pages';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Notifications } from "@mantine/notifications";
+import { ModalsProvider } from "@mantine/modals";
+import { NavigationProgress } from "@mantine/nprogress";
 
 const root = document.getElementById("root")!;
 
@@ -48,7 +51,7 @@ const router = createBrowserRouter([
         children: [
             {
                 path: "todo/:id",
-                element: <Todo/>
+                element: <Todo />
             },
             {
                 path: "",
@@ -63,10 +66,11 @@ const router = createBrowserRouter([
 ]);
 
 createRoot(root).render(
-    <React.StrictMode>
-        <MantineProvider defaultColorScheme="dark" theme={theme}>
-            <Notifications/>
+    <MantineProvider defaultColorScheme="dark" theme={theme}>
+        <ModalsProvider>
+            <NavigationProgress />
+            <Notifications />
             <RouterProvider router={router} />
-        </MantineProvider>
-    </React.StrictMode>
+        </ModalsProvider>
+    </MantineProvider>
 );

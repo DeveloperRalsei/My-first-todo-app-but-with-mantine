@@ -7,9 +7,6 @@ const todoScheme: Schema = new Schema({
     description: {
         type: String
     },
-    isComplated: {
-        type: Boolean
-    }
 })
 
 export default mongoose.model("todos", todoScheme, "todos")

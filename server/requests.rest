@@ -5,16 +5,17 @@ Content-Type: application/json
 
 {
     "title": "test",
-    "description": "loremipsumdolersitamer",
-    "isComplated": true
+    "description": "loremipsumdolersitamer"
 }
 ###
 DELETE  http://localhost:3000/api/todos
 Content-Type: application/json
 
 {
-    "id": "66d4850e0912a68535de67b7"
+    "id": "66d5bb1b81448a0421e512dd"
 }
+###
+DELETE  http://localhost:3000/api/todos
 ###
 PATCH http://localhost:3000/api/todos
 Content-Type: application/json

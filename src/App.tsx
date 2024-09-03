@@ -1,11 +1,12 @@
-import { ActionIcon, AppShell, Container, Group, Space, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Anchor, AppShell, Container, Group, Space, Text, Title, Tooltip } from "@mantine/core";
 import { IconChevronLeft } from "@tabler/icons-react";
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { author } from '../package.json';
 
 export type Page = "list" | "todo";
 
 export const App = () => {
-    const location = useLocation()
+    const location = useLocation();
 
     return <AppShell
         header={{
@@ -17,9 +18,9 @@ export const App = () => {
 
     >
         <AppShell.Header withBorder={false}>
-            
+
             <Group h={"100%"} w={"100%"} align="center" justify="center">
-            
+
                 <Title order={2}>To-Do</Title>
             </Group>
         </AppShell.Header>
@@ -30,16 +31,22 @@ export const App = () => {
                     component={Link}
                     to={"/"}
                 >
-                    <IconChevronLeft/>
+                    <IconChevronLeft />
                 </ActionIcon>}
                 <Space h={30} />
-                <Outlet/>
+                <Outlet />
             </Container>
         </AppShell.Main>
 
         <AppShell.Footer withBorder={false} px={30}>
 
-            <Group w={"100%"} justify="end">
+            <Group w={"100%"} justify="space-between">
+                <Text>
+                    Made by
+                    <Anchor href={author.url} target="_blank">
+                        {author.name}
+                    </Anchor> 
+                </Text>
                 <Tooltip label="Meow">
                     <Text>
                         :3
